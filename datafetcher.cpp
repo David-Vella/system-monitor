@@ -1,17 +1,20 @@
 #include "datafetcher.h"
 
-DataFetcher::DataFetcher(std::string path_in) : path(path_in) { }
+DataFetcher::DataFetcher(std::string path_in)
+    : path(path_in), start(std::time(NULL)) { }
 
-int DataFetcher::fetch() {
+void DataFetcher::fetch(int &time, int &temp) {
+    time = 0;
+    temp = 0;
+
     std::ifstream fin(path);
     if (!fin.is_open())
-        return 0;
+        return;
 
-    int temp;
     fin >> temp;
     temp /= 1000;
 
     fin.close();
 
-    return temp;
+    time = (int)(std::time(NULL) - start);
 }
