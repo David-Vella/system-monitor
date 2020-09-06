@@ -6,29 +6,29 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>968</width>
+    <height>732</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QCustomPlot" name="plot" native="true">
+   <widget class="QCustomPlot" name="usagePlot" native="true">
     <property name="geometry">
      <rect>
       <x>20</x>
       <y>10</y>
-      <width>771</width>
-      <height>381</height>
+      <width>921</width>
+      <height>201</height>
      </rect>
     </property>
    </widget>
    <widget class="QComboBox" name="TimeDropDown">
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>420</y>
+      <x>50</x>
+      <y>650</y>
       <width>79</width>
       <height>26</height>
      </rect>
@@ -50,11 +50,6 @@
     </item>
     <item>
      <property name="text">
-      <string>10min</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
       <string>15min</string>
      </property>
     </item>
@@ -72,8 +67,8 @@
    <widget class="QLabel" name="TimeLabel">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>420</y>
+      <x>10</x>
+      <y>650</y>
       <width>58</width>
       <height>18</height>
      </rect>
@@ -82,13 +77,33 @@
      <string>Time </string>
     </property>
    </widget>
+   <widget class="QCustomPlot" name="tempPlot" native="true">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>220</y>
+      <width>921</width>
+      <height>201</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QCustomPlot" name="fanPlot" native="true">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>430</y>
+      <width>921</width>
+      <height>191</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>968</width>
      <height>23</height>
     </rect>
    </property>
