@@ -20,7 +20,7 @@ public:
     ~MainWindow();
 
 private slots:
-    void addPoint();
+    void plot();
 
 private:
     class colorGenerator {
@@ -35,6 +35,7 @@ private:
 
     void setupPlots();
     void addLegend(QCustomPlot *plot);
+    int getTime();
 
     Ui::MainWindow *ui;
     QTimer *timer;

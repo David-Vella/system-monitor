@@ -18,7 +18,7 @@ MainWindow::~MainWindow() {
     delete[] layouts;
 }
 
-void MainWindow::addPoint() {
+void MainWindow::plot() {
     QVector<int> usage, temp, fan;
 
     data->fetchUsage(usage);
@@ -49,12 +49,15 @@ void MainWindow::addPoint() {
         ui->fanPlot->graph(i)->setData(x, y_fan[i]);
     }
 
+    ui->usagePlot->xAxis->setRange(0, getTime());
     ui->usagePlot->replot();
     ui->usagePlot->update();
 
+    ui->tempPlot->xAxis->setRange(0, getTime());
     ui->tempPlot->replot();
     ui->tempPlot->update();
 
+    ui->fanPlot->xAxis->setRange(0, getTime());
     ui->fanPlot->replot();
     ui->fanPlot->update();
 }
@@ -87,15 +90,15 @@ void MainWindow::setupPlots() {
         y_fan.push_back(QVector<double>());
     }
 
-    ui->usagePlot->xAxis->setRange(0, 30);
+    ui->usagePlot->xAxis->setRange(0, getTime());
     ui->usagePlot->yAxis->setLabel("Usage  (%)");
     ui->usagePlot->yAxis->setRange(0, 100);
 
-    ui->tempPlot->xAxis->setRange(0, 30);
+    ui->tempPlot->xAxis->setRange(0, getTime());
     ui->tempPlot->yAxis->setLabel("Temperature  (deg C)");
     ui->tempPlot->yAxis->setRange(0, 100);
 
-    ui->fanPlot->xAxis->setRange(0, 30);
+    ui->fanPlot->xAxis->setRange(0, getTime());
     ui->fanPlot->yAxis->setLabel("Fan Speed  (RPM)");
     ui->fanPlot->yAxis->setRange(0, 5000);
 
@@ -103,7 +106,7 @@ void MainWindow::setupPlots() {
     addLegend(ui->tempPlot);
     addLegend(ui->fanPlot);
 
-    connect(timer, SIGNAL(timeout()), this, SLOT(addPoint()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(plot()));
     timer->start(1000);
 }
 
@@ -125,6 +128,23 @@ void MainWindow::addLegend(QCustomPlot *plot) {
         layout = layouts;
     else
         ++layout;
+}
+
+int MainWindow::getTime() {
+    QString string = ui->TimeDropDown->currentText();
+
+    if (string == "30sec")
+        return 30;
+    else if (string == "1min")
+        return 60;
+    else if (string == "5min")
+        return 300;
+    else if (string == "15min")
+        return 900;
+    else if (string == "30min")
+        return 1800;
+    else
+        return 3600;
 }
 
 MainWindow::colorGenerator::colorGenerator() {
