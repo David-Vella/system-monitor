@@ -1,113 +1,126 @@
 #include "datafetcher.h"
 
-DataFetcher::DataFetcher(const char *path) : config_file(path) {
-    parse_config();
+DataFetcher::DataFetcher() {
+    getUsageAvailable(usageNames);
+    getTempAvailable(tempNames);
+    getFanAvailable(fanNames);
 
-    for (auto path : usage_path)
-        usage_prev.push_back(0);
+    for (int i = 0; i < getUsageNum(); ++i)
+        usagePrev.push_back(0);
 }
 
-int DataFetcher::parse_line(std::string line, Section state) {
-    size_t pos = line.find('=');
-    if (pos == std::string::npos) {
-        std::cout << "Failed to parse line: " << line << std::endl;
-        return -1;
-    }
+void DataFetcher::getUsageAvailable(QVector<QString> &names) {
+    names.clear();
 
-    std::string name = line.substr(0, pos);
-    std::string path = line.substr(pos + 1);
-
-    if (state == USAGE) {
-        usage_name.push_back(name);
-        usage_path.push_back(path);
-    } else if (state == TEMP) {
-        temp_name.push_back(name);
-        temp_path.push_back(path);
-    } else if (state == FAN) {
-        fan_name.push_back(name);
-        fan_path.push_back(path);
-    }
-
-    return 0;
-}
-
-int DataFetcher::parse_config() {
-    std::ifstream fin(config_file, std::ios::in);
-
-    if (!fin.is_open()) {
-        std::cout << "Failed to open config file: " << config_file << std::endl;
-        return -1;
-    }
+    std::ifstream fin(USAGE_DATA_FILE, std::ios::in);
+    if (!fin.is_open())
+        throw std::runtime_error("Failed to open file: " + std::string(USAGE_DATA_FILE));
 
     std::string line;
-    Section state;
 
     while (std::getline(fin, line)) {
-        if (line.empty() || line.front() == '#')
-            continue;
-        else if (line == "[usage]") {
-            state = USAGE;
-            continue;
-        } else if (line == "[temp]") {
-            state = TEMP;
-            continue;
-        } else if (line == "[fan]") {
-            state = FAN;
-            continue;
+        if (line.find("cpu") != std::string::npos) {
+            std::string name = line.substr(0, line.find(' '));
+            names.push_back(QString(name.c_str()));
         }
-
-        if (parse_line(line, state))
-            return -1;
     }
     fin.close();
-
-    return 0;
 }
 
-bool DataFetcher::checkConfig() {
-    if (parse_config())
-        return false;
-    else
-        return true;
+void DataFetcher::getTempAvailable(QVector<QString> &names) {
+    names.clear();
+
+    std::istringstream strin(getSensorsOutput());
+
+    bool first = true;
+    std::string line, device;
+    while (std::getline(strin, line)) {
+        if (line.empty() || first) {
+            std::getline(strin, line);
+            device = line.substr(0, line.find('-'));
+            first = false;
+        }
+        else if (line.find(" C") != std::string::npos
+                 && line.find(':') != std::string::npos) {
+            std::string name = line.substr(0, line.find(':'));
+            name = device + ':' + name;
+            names.push_back(QString(name.c_str()));
+        }
+    }
 }
 
-void DataFetcher::fetchUsage(QVector<int> &data) {
+void DataFetcher::getFanAvailable(QVector<QString> &names) {
+    names.clear();
+
+    std::istringstream strin(getSensorsOutput());
+
+    bool first = true;
+    std::string line, device;
+    while (std::getline(strin, line)) {
+        if (line.empty() || first) {
+            std::getline(strin, line);
+            device = line.substr(0, line.find('-'));
+            first = false;
+        }
+        else if (line.find(" RPM") != std::string::npos
+                 && line.find(':') != std::string::npos) {
+            std::string name = line.substr(0, line.find(':'));
+            name = device + ':' + name;
+            names.push_back(QString(name.c_str()));
+        }
+    }
+}
+
+std::string DataFetcher::getSensorsOutput() {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(SENSORS_COMMAND, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("Failed to open pipe for sensor input");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
+void DataFetcher::getUsageData(QVector<int> &data) {
     static bool first_call = true;
 
     data.clear();
 
-    auto path_iter = usage_path.begin();
-    auto prev_iter = usage_prev.begin();
+    QVector<QString>::iterator namesIter = usageNames.begin();
+    QVector<int>::iterator prevIter = usagePrev.begin();
+
+    std::ifstream fin(USAGE_DATA_FILE, std::ios::in);
+    if (!fin.is_open())
+        throw std::runtime_error("Failed to open file: " + std::string(USAGE_DATA_FILE));
 
     std::string line;
 
-    std::ifstream fin(USAGE_DATA_FILE, std::ios::in);
-    if (!fin.is_open()) {
-        std::cout << "Failed to open file: " << USAGE_DATA_FILE << std::endl;
-        return;
-    }
-
     while (std::getline(fin, line)) {
-        if (path_iter == usage_path.end())
+        if (namesIter == usageNames.end())
             break;
-        else if (line.find(*path_iter) == std::string::npos)
+        else if (line.find(namesIter->toStdString()) == std::string::npos)
             continue;
 
         int beg = line.find(' ');
+            while (line[beg] == ' ')
+                ++beg;
         int end = line.find(' ', beg + 1);
 
-        std::string str_usage = line.substr(beg + 1, end - beg - 1);
-        int cumulative = std::stoi(str_usage);
-        int usage = cumulative - *prev_iter;
-        *prev_iter = cumulative;
+        std::string str = line.substr(beg + 1, end - beg - 1);
+        int cumulative = std::stoi(str);
+        int usage = cumulative - *prevIter;
+        *prevIter = cumulative;
 
         if (first_call)
             data.push_back(0);
         else
             data.push_back(usage);
 
-        ++path_iter;
-        ++prev_iter;
+        ++namesIter;
+        ++prevIter;
     }
     fin.close();
 
@@ -115,73 +128,76 @@ void DataFetcher::fetchUsage(QVector<int> &data) {
         first_call = false;
 }
 
-void DataFetcher::fetchTemp(QVector<int> &data) {
+void DataFetcher::getTempData(QVector<int> &data) {
     data.clear();
 
-    for (auto path : temp_path) {
-        std::ifstream fin(path, std::ios::in);
+    std::istringstream strin(getSensorsOutput());
+    std::string line;
 
-        if (!fin.is_open()) {
-            std::cout << "Failed to open file: " << path << std::endl;
-            return;
+    QVector<QString>::iterator iter = tempNames.begin();
+
+    while (std::getline(strin, line)) {
+        if (iter == tempNames.end())
+            break;
+
+        QString needle = iter->right(iter->length() - iter->indexOf(':') - 1);
+
+        if (line.find(needle.toStdString()) != std::string::npos) {
+            int beg = line.find(": ");
+            int end = line.find(" C ");
+            std::string stringData = line.substr(beg + 1, end - 1);
+
+            int i = 0;
+            while (stringData[i] == ' ')
+                ++i;
+            stringData = stringData.substr(i);
+
+            data.push_back(std::stoi(stringData));
+
+            ++iter;
         }
-
-        int temp;
-        fin >> temp;
-        temp /= 1000;
-
-        data.push_back(temp);
-
-        fin.close();
     }
 }
 
-void DataFetcher::fetchFan(QVector<int> &data) {
+void DataFetcher::getFanData(QVector<int> &data) {
     data.clear();
 
-    for (auto path : fan_path) {
-        std::ifstream fin(path, std::ios::in);
+    std::istringstream strin(getSensorsOutput());
+    std::string line;
 
-        if (!fin.is_open()) {
-            std::cout << "Failed to open file: " << path << std::endl;
-            return;
+    QVector<QString>::iterator iter = fanNames.begin();
+
+    while (std::getline(strin, line)) {
+        if (iter == fanNames.end())
+            break;
+
+        QString needle = iter->right(iter->length() - iter->indexOf(':') - 1);
+
+        if (line.find(needle.toStdString()) != std::string::npos) {
+            int beg = line.find(": ");
+            int end = line.find(" C ");
+            std::string stringData = line.substr(beg + 1, end - 1);
+
+            int i = 0;
+            while (stringData[i] == ' ')
+                ++i;
+            stringData = stringData.substr(i);
+
+            data.push_back(std::stoi(stringData));
+
+            ++iter;
         }
-
-        int speed;
-        fin >> speed;
-
-        data.push_back(speed);
-
-        fin.close();
     }
-}
-
-void DataFetcher::getUsageNames(QVector<QString> &names) {
-    names.clear();
-    for (auto name : usage_name)
-        names.push_back(name.c_str());
-}
-
-void DataFetcher::getTempNames(QVector<QString> &names) {
-    names.clear();
-    for (auto name : temp_name)
-        names.push_back(name.c_str());
-}
-
-void DataFetcher::getFanNames(QVector<QString> &names) {
-    names.clear();
-    for (auto name : fan_name)
-        names.push_back(name.c_str());
 }
 
 int DataFetcher::getUsageNum() {
-    return usage_name.size();
+    return usageNames.size();
 }
 
 int DataFetcher::getTempNum() {
-    return temp_name.size();
+    return tempNames.size();
 }
 
 int DataFetcher::getFanNum() {
-    return fan_name.size();
+    return fanNames.size();
 }

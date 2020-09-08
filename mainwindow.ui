@@ -6,20 +6,23 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>968</width>
-    <height>732</height>
+    <width>1131</width>
+    <height>667</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QCustomPlot" name="usagePlot" native="true">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>10</y>
-      <width>921</width>
+      <width>861</width>
       <height>201</height>
      </rect>
     </property>
@@ -27,9 +30,9 @@
    <widget class="QComboBox" name="TimeDropDown">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>650</y>
-      <width>79</width>
+      <x>1040</x>
+      <y>590</y>
+      <width>71</width>
       <height>26</height>
      </rect>
     </property>
@@ -67,33 +70,105 @@
    <widget class="QLabel" name="TimeLabel">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>650</y>
-      <width>58</width>
-      <height>18</height>
+      <x>890</x>
+      <y>590</y>
+      <width>141</width>
+      <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>Time </string>
+     <string>Horizontal Axis Range</string>
     </property>
    </widget>
    <widget class="QCustomPlot" name="tempPlot" native="true">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>220</y>
-      <width>921</width>
+      <width>861</width>
       <height>201</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
    </widget>
    <widget class="QCustomPlot" name="fanPlot" native="true">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>430</y>
-      <width>921</width>
+      <width>861</width>
       <height>191</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="usageSelect">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>30</y>
+      <width>241</width>
+      <height>171</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="selectUsageLabel">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>10</y>
+      <width>241</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Select Usage Data</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="SelectTempLabel">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>220</y>
+      <width>241</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Select Temperature Data</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="selectFanLabel">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>430</y>
+      <width>241</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Select Fan Data</string>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="tempSelect">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>240</y>
+      <width>241</width>
+      <height>171</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="fanSelect">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>450</y>
+      <width>241</width>
+      <height>131</height>
      </rect>
     </property>
    </widget>
@@ -103,7 +178,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>968</width>
+     <width>1131</width>
      <height>23</height>
     </rect>
    </property>

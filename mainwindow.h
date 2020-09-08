@@ -19,34 +19,42 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    static constexpr const int VECTOR_MAX_LENGTH = 3600;
+
 private slots:
     void plot();
 
 private:
-    class colorGenerator {
+    class ColorGenerator {
     public:
-        colorGenerator();
-        QPen operator()();
+        ColorGenerator();
+        QColor operator()();
         void reset();
 
     private:
-        QVector<QPen> colors;
+        QVector<QColor> colors;
     };
 
     void setupPlots();
+    void setupSelect();
     void addLegend(QCustomPlot *plot);
     int getTime();
+
+    void clearVector(QVector<QListWidgetItem*> vec);
 
     Ui::MainWindow *ui;
     QTimer *timer;
     DataFetcher *data;
 
-    QCPLayoutGrid *layouts;
+    QVector<QListWidgetItem*> usageItems;
+    QVector<QListWidgetItem*> tempItems;
+    QVector<QListWidgetItem*> fanItems;
 
     QVector<double> x;
-    QVector<QVector<double>> y_usage;
-    QVector<QVector<double>> y_temp;
-    QVector<QVector<double>> y_fan;
+
+    QVector<QVector<double>> yUsage;
+    QVector<QVector<double>> yTemp;
+    QVector<QVector<double>> yFan;
 };
 
 #endif // MAINWINDOW_H

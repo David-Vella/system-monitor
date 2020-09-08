@@ -2,51 +2,78 @@
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent),
-      ui(new Ui::MainWindow),
-      timer(new QTimer(this)),
-      data(new DataFetcher(DataFetcher::DEFAULT_CONFIG_FILE)),
-      layouts(new QCPLayoutGrid[3]) {
+    : QMainWindow(parent), ui(new Ui::MainWindow),
+      timer(new QTimer(this)), data(new DataFetcher) {
     ui->setupUi(this);
     setupPlots();
+    setupSelect();
 }
 
 MainWindow::~MainWindow() {
     delete data;
     delete timer;
     delete ui;
-    delete[] layouts;
+
+    clearVector(usageItems);
+    clearVector(tempItems);
+    clearVector(fanItems);
+}
+
+void MainWindow::clearVector(QVector<QListWidgetItem*> vec) {
+    for (QListWidgetItem *item : vec)
+        delete item;
 }
 
 void MainWindow::plot() {
     QVector<int> usage, temp, fan;
 
-    data->fetchUsage(usage);
-    data->fetchTemp(temp);
-    data->fetchFan(fan);
+    data->getUsageData(usage);
+    data->getTempData(temp);
+    data->getFanData(fan);
 
     if (x.size() == 0)
         x.push_back(0);
-    else if (x.size() < 3600)
+    else if (x.size() < VECTOR_MAX_LENGTH)
         x.push_back(x.back() + 1);
 
     for (int i = 0; i < data->getUsageNum(); ++i) {
-        y_usage[i].push_front(usage[i]);
-        if (y_usage[i].size() > 3600)
-            y_usage[i].pop_back();
-        ui->usagePlot->graph(i)->setData(x, y_usage[i]);
+        yUsage[i].push_front(usage[i]);
+
+        if (yUsage[i].size() > VECTOR_MAX_LENGTH)
+            yUsage[i].pop_back();
+
+        if (usageItems[i]->checkState()) {
+            ui->usagePlot->graph(i)->setData(x, yUsage[i]);
+            ui->usagePlot->graph(i)->setVisible(true);
+        } else {
+            ui->usagePlot->graph(i)->setVisible(false);
+        }
     }
     for (int i = 0; i < data->getTempNum(); ++i) {
-        y_temp[i].push_front(temp[i]);
-        if (y_temp[i].size() > 3600)
-            y_temp[i].pop_back();
-        ui->tempPlot->graph(i)->setData(x, y_temp[i]);
+        yTemp[i].push_front(temp[i]);
+
+        if (yTemp[i].size() > VECTOR_MAX_LENGTH)
+            yTemp[i].pop_back();
+
+        if (tempItems[i]->checkState()) {
+            ui->tempPlot->graph(i)->setData(x, yTemp[i]);
+            ui->tempPlot->graph(i)->setVisible(true);
+        } else {
+            ui->tempPlot->graph(i)->setVisible(false);
+        }
     }
     for (int i = 0; i < data->getFanNum(); ++i) {
-        y_fan[i].push_front(fan[i]);
-        if (y_fan[i].size() > 3600)
-            y_fan[i].pop_back();
-        ui->fanPlot->graph(i)->setData(x, y_fan[i]);
+        yFan[i].push_front(fan[i]);
+
+        if (yFan[i].size() > VECTOR_MAX_LENGTH)
+            yFan[i].pop_back();
+
+        if (fanItems[i]->checkState()) {
+            ui->fanPlot->graph(i)->setData(x, yFan[i]);
+            ui->fanPlot->graph(i)->setVisible(true);
+        } else {
+            ui->fanPlot->graph(i)->setVisible(false);
+        }
     }
 
     ui->usagePlot->xAxis->setRange(0, getTime());
@@ -63,71 +90,81 @@ void MainWindow::plot() {
 }
 
 void MainWindow::setupPlots() {
-    colorGenerator getColor;
+    ColorGenerator getColor;
 
     QVector<QString> names;
 
-    data->getUsageNames(names);
+    data->getUsageAvailable(names);
     for (int i = 0; i < data->getUsageNum(); ++i) {
         ui->usagePlot->addGraph()->setName(names[i]);
-        ui->usagePlot->graph(i)->setPen(getColor());
-        y_usage.push_back(QVector<double>());
+        ui->usagePlot->graph(i)->setPen(QPen(getColor()));
+        yUsage.push_back(QVector<double>());
     }
 
     getColor.reset();
-    data->getTempNames(names);
+    data->getTempAvailable(names);
     for (int i = 0; i < data->getTempNum(); ++i) {
         ui->tempPlot->addGraph()->setName(names[i]);
-        ui->tempPlot->graph(i)->setPen(getColor());
-        y_temp.push_back(QVector<double>());
+        ui->tempPlot->graph(i)->setPen(QPen(getColor()));
+        yTemp.push_back(QVector<double>());
     }
 
     getColor.reset();
-    data->getFanNames(names);
+    data->getFanAvailable(names);
     for (int i = 0; i < data->getFanNum(); ++i) {
         ui->fanPlot->addGraph()->setName(names[i]);
-        ui->fanPlot->graph(i)->setPen(getColor());
-        y_fan.push_back(QVector<double>());
+        ui->fanPlot->graph(i)->setPen(QPen(getColor()));
+        yFan.push_back(QVector<double>());
     }
 
+    ui->usagePlot->xAxis->setTickLabels(false);
     ui->usagePlot->xAxis->setRange(0, getTime());
     ui->usagePlot->yAxis->setLabel("Usage  (%)");
     ui->usagePlot->yAxis->setRange(0, 100);
 
+    ui->tempPlot->xAxis->setTickLabels(false);
     ui->tempPlot->xAxis->setRange(0, getTime());
     ui->tempPlot->yAxis->setLabel("Temperature  (deg C)");
     ui->tempPlot->yAxis->setRange(0, 100);
 
+    ui->fanPlot->xAxis->setTickLabels(false);
     ui->fanPlot->xAxis->setRange(0, getTime());
     ui->fanPlot->yAxis->setLabel("Fan Speed  (RPM)");
     ui->fanPlot->yAxis->setRange(0, 5000);
-
-    addLegend(ui->usagePlot);
-    addLegend(ui->tempPlot);
-    addLegend(ui->fanPlot);
 
     connect(timer, SIGNAL(timeout()), this, SLOT(plot()));
     timer->start(1000);
 }
 
-void MainWindow::addLegend(QCustomPlot *plot) {
-    static QCPLayoutGrid *layout = layouts;
+void MainWindow::setupSelect() {
+    QVector<QString> names;
+    ColorGenerator getColor;
 
-    plot->xAxis->setTickLabels(false);
-    plot->legend->setVisible(true);
-    plot->plotLayout()->addElement(1, 0, layout);
-    layout->setMargins(QMargins(5, 0, 5, 0));
-    layout->addElement(0, 0, plot->legend);
-    plot->legend->setIconTextPadding(0);
-    plot->legend->setIconSize(QSize(20,20));
-    plot->legend->setBorderPen(QPen(Qt::NoPen));
-    plot->legend->setFillOrder(QCPLegend::foColumnsFirst);
-    plot->plotLayout()->setRowStretchFactor(1, 0.001);
+    data->getUsageAvailable(names);
+    for (QString name : names) {
+        usageItems.push_back(new QListWidgetItem(name, ui->usageSelect));
+        usageItems.back()->setBackground(QBrush(getColor()));
+        usageItems.back()->setCheckState(Qt::Unchecked);
+        ui->usageSelect->addItem(usageItems.back());
+    }
+    getColor.reset();
 
-    if (layout - layouts >= 3)
-        layout = layouts;
-    else
-        ++layout;
+    data->getTempAvailable(names);
+    for (QString name : names) {
+        tempItems.push_back(new QListWidgetItem(name, ui->tempSelect));
+        tempItems.back()->setBackground(QBrush(getColor()));
+        tempItems.back()->setCheckState(Qt::Unchecked);
+        ui->tempSelect->addItem(tempItems.back());
+    }
+    getColor.reset();
+
+    data->getFanAvailable(names);
+    for (QString name : names) {
+        fanItems.push_back(new QListWidgetItem(name, ui->fanSelect));
+        fanItems.back()->setBackground(QBrush(getColor()));
+        fanItems.back()->setCheckState(Qt::Unchecked);
+        ui->fanSelect->addItem(fanItems.back());
+    }
 }
 
 int MainWindow::getTime() {
@@ -147,36 +184,36 @@ int MainWindow::getTime() {
         return 3600;
 }
 
-MainWindow::colorGenerator::colorGenerator() {
+MainWindow::ColorGenerator::ColorGenerator() {
     reset();
 }
 
-QPen MainWindow::colorGenerator::operator()() {
+QColor MainWindow::ColorGenerator::operator()() {
     if (colors.size() == 0)
         reset();
 
-    QPen color = colors.back();
+    QColor color = colors.back();
     colors.pop_back();
     return color;
 }
 
-void MainWindow::colorGenerator::reset() {
+void MainWindow::ColorGenerator::reset() {
     colors = {
-        QPen(Qt::lightGray),
-        QPen(Qt::darkCyan),
-        QPen(Qt::darkMagenta),
-        QPen(Qt::darkGray),
-        QPen(Qt::darkYellow),
-        QPen(Qt::darkGreen),
-        QPen(Qt::darkBlue),
-        QPen(Qt::darkRed),
-        QPen(Qt::cyan),
-        QPen(Qt::magenta),
-        QPen(Qt::green),
-        QPen(Qt::yellow),
-        QPen(Qt::gray),
-        QPen(Qt::black),
-        QPen(Qt::red),
-        QPen(Qt::blue)
+        Qt::lightGray,
+        Qt::darkCyan,
+        Qt::darkMagenta,
+        Qt::darkGray,
+        Qt::darkYellow,
+        Qt::darkGreen,
+        Qt::darkBlue,
+        Qt::darkRed,
+        Qt::cyan,
+        Qt::magenta,
+        Qt::green,
+        Qt::yellow,
+        Qt::gray,
+        Qt::black,
+        Qt::red,
+        Qt::blue
     };
 }

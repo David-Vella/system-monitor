@@ -2,40 +2,45 @@
 #define DATAFETCHER_H
 
 #include <vector>
+#include <array>
+#include <memory>
+#include <cstdio>
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <stdexcept>
 
 #include <QVector>
 #include <QString>
 
 class DataFetcher {
 public:
-    DataFetcher(const char *path);
+    DataFetcher();
 
-    bool checkConfig();
+    void getUsageAvailable(QVector<QString> &names);
+    void getTempAvailable(QVector<QString> &names);
+    void getFanAvailable(QVector<QString> &names);
 
-    void fetchUsage(QVector<int> &data);
-    void fetchTemp(QVector<int> &data);
-    void fetchFan(QVector<int> &data);
-
-    void getUsageNames(QVector<QString> &names);
-    void getTempNames(QVector<QString> &names);
-    void getFanNames(QVector<QString> &names);
+    void getUsageData(QVector<int> &data);
+    void getTempData(QVector<int> &data);
+    void getFanData(QVector<int> &data);
 
     int getUsageNum();
     int getTempNum();
     int getFanNum();
 
-    static constexpr const char *DEFAULT_CONFIG_FILE = "/home/david/projects/hwmon/hwmon.conf";
+    static constexpr int BUFFER_SIZE = 2048;
+    static constexpr const char *SENSORS_COMMAND= "sensors -A";
     static constexpr const char *USAGE_DATA_FILE = "/proc/stat";
 
 private:
-    enum Section { USAGE, TEMP, FAN };
+    std::string getSensorsOutput();
 
-    int parse_line(std::string line, Section state);
-    int parse_config();
+    QVector<int> usagePrev;
 
-    std::string config_file;
+    QVector<QString> usageNames;
+    QVector<QString> tempNames;
+    QVector<QString> fanNames;
 
     std::vector<std::string> usage_path;
     std::vector<std::string> usage_name;
