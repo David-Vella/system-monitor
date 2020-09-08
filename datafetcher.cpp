@@ -72,7 +72,7 @@ void DataFetcher::getFanAvailable(QVector<QString> &names) {
 }
 
 std::string DataFetcher::getSensorsOutput() {
-    std::array<char, 128> buffer;
+    std::array<char, BUFFER_SIZE> buffer;
     std::string result;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(SENSORS_COMMAND, "r"), pclose);
     if (!pipe) {

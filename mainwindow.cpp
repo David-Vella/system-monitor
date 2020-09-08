@@ -139,11 +139,13 @@ void MainWindow::setupPlots() {
 void MainWindow::setupSelect() {
     QVector<QString> names;
     ColorGenerator getColor;
+    QPixmap map(SELECT_ICON_SIZE, SELECT_ICON_SIZE);
 
     data->getUsageAvailable(names);
     for (QString name : names) {
+        map.fill(getColor());
         usageItems.push_back(new QListWidgetItem(name, ui->usageSelect));
-        usageItems.back()->setBackground(QBrush(getColor()));
+        usageItems.back()->setIcon(map);
         usageItems.back()->setCheckState(Qt::Unchecked);
         ui->usageSelect->addItem(usageItems.back());
     }
@@ -151,8 +153,9 @@ void MainWindow::setupSelect() {
 
     data->getTempAvailable(names);
     for (QString name : names) {
+        map.fill(getColor());
         tempItems.push_back(new QListWidgetItem(name, ui->tempSelect));
-        tempItems.back()->setBackground(QBrush(getColor()));
+        tempItems.back()->setIcon(map);
         tempItems.back()->setCheckState(Qt::Unchecked);
         ui->tempSelect->addItem(tempItems.back());
     }
@@ -160,8 +163,9 @@ void MainWindow::setupSelect() {
 
     data->getFanAvailable(names);
     for (QString name : names) {
+        map.fill(getColor());
         fanItems.push_back(new QListWidgetItem(name, ui->fanSelect));
-        fanItems.back()->setBackground(QBrush(getColor()));
+        fanItems.back()->setIcon(map);
         fanItems.back()->setCheckState(Qt::Unchecked);
         ui->fanSelect->addItem(fanItems.back());
     }
@@ -199,7 +203,7 @@ QColor MainWindow::ColorGenerator::operator()() {
 
 void MainWindow::ColorGenerator::reset() {
     colors = {
-        Qt::lightGray,
+        Qt::black,
         Qt::darkCyan,
         Qt::darkMagenta,
         Qt::darkGray,
@@ -207,12 +211,12 @@ void MainWindow::ColorGenerator::reset() {
         Qt::darkGreen,
         Qt::darkBlue,
         Qt::darkRed,
+        Qt::lightGray,
         Qt::cyan,
         Qt::magenta,
         Qt::green,
         Qt::yellow,
         Qt::gray,
-        Qt::black,
         Qt::red,
         Qt::blue
     };

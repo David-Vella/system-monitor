@@ -20,6 +20,7 @@ public:
     ~MainWindow();
 
     static constexpr const int VECTOR_MAX_LENGTH = 3600;
+    static constexpr const int SELECT_ICON_SIZE = 12;
 
 private slots:
     void plot();
