@@ -1,6 +1,6 @@
 # About
 
-A graphical frontend for `lmsensors` featuring efficient sensor data plotting in real time.
+A Qt graphical frontend for [lm_sensors](https://github.com/lm-sensors/lm-sensors) featuring efficient sensor data plotting in real time. Created using [qcustomplot](https://www.qcustomplot.com/)
 
 ![unable to load image](res/screenshot.png)
 
