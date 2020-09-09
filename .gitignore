@@ -1,0 +1,11 @@
+*
+!/**/
+!*.*
+.vscode
+*.autosave
+*.user
+*.stash
+*.o
+moc_*.cpp
+moc_*.h
+ui_mainwindow.h
