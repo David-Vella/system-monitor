@@ -53,9 +53,9 @@ private:
 
     QVector<double> x;
 
-    QVector<QVector<double>> yUsage;
-    QVector<QVector<double>> yTemp;
-    QVector<QVector<double>> yFan;
+    QList<QVector<double>> yUsage;
+    QList<QVector<double>> yTemp;
+    QList<QVector<double>> yFan;
 };
 
 #endif // MAINWINDOW_H

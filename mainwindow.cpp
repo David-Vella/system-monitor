@@ -5,6 +5,11 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow),
       timer(new QTimer(this)), data(new DataFetcher) {
     ui->setupUi(this);
+
+    yUsage.reserve(VECTOR_MAX_LENGTH);
+    yTemp.reserve(VECTOR_MAX_LENGTH);
+    yFan.reserve(VECTOR_MAX_LENGTH);
+
     setupPlots();
     setupSelect();
 }
